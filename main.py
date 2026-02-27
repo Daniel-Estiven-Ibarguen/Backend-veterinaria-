@@ -6,10 +6,51 @@ from src.entities.perro import Perro
 animales: list[Animal] = []
 
 
+def es_entero_positivo(valor: str) -> bool:
+    """Valida que el valor sea un entero positivo."""
+    try:
+        num = int(valor)
+        return num > 0
+    except ValueError:
+        return False
+
+
+def es_string_no_vacio(valor: str) -> bool:
+    """Valida que el valor no sea vacío o solo espacios."""
+    return bool(valor and valor.strip())
+
+
+def obtener_nombre(prompt: str) -> str:
+    """Obtiene un nombre válido (string no vacío)."""
+    while True:
+        nombre = input(prompt)
+        if es_string_no_vacio(nombre):
+            return nombre.strip()
+        print("Error: El nombre no puede estar vacío")
+
+
+def obtener_edad(prompt: str) -> int:
+    """Obtiene una edad válida (entero positivo)."""
+    while True:
+        edad = input(prompt)
+        if es_entero_positivo(edad):
+            return int(edad)
+        print("Error: La edad debe ser un número entero positivo")
+
+
+def obtener_especie(prompt: str) -> str:
+    """Obtiene una especie válida (string no vacío)."""
+    while True:
+        especie = input(prompt)
+        if es_string_no_vacio(especie):
+            return especie.strip()
+        print("Error: La especie no puede estar vacía")
+
+
 def crear_gato() -> None:
     """Crea un nuevo gato y lo agrega a la lista."""
-    nombre = input("Nombre del gato: ")
-    edad = int(input("Edad del gato: "))
+    nombre = obtener_nombre("Nombre del gato: ")
+    edad = obtener_edad("Edad del gato: ")
     gato = Gato(nombre, edad)
     animales.append(gato)
     print(f"Gato '{nombre}' creado correctamente")
@@ -17,8 +58,8 @@ def crear_gato() -> None:
 
 def crear_perro() -> None:
     """Crea un nuevo perro y lo agrega a la lista."""
-    nombre = input("Nombre del perro: ")
-    edad = int(input("Edad del perro: "))
+    nombre = obtener_nombre("Nombre del perro: ")
+    edad = obtener_edad("Edad del perro: ")
     perro = Perro(nombre, edad)
     animales.append(perro)
     print(f"Perro '{nombre}' creado correctamente")
@@ -26,9 +67,9 @@ def crear_perro() -> None:
 
 def crear_animal() -> None:
     """Crea un animal genérico y lo agrega a la lista."""
-    nombre = input("Nombre del animal: ")
-    edad = int(input("Edad del animal: "))
-    especie = input("Especie del animal: ")
+    nombre = obtener_nombre("Nombre del animal: ")
+    edad = obtener_edad("Edad del animal: ")
+    especie = obtener_especie("Especie del animal: ")
     animal = Animal(nombre, edad, especie)
     animales.append(animal)
     print(f"Animal '{nombre}' ({especie}) creado correctamente")
