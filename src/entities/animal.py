@@ -6,11 +6,13 @@ class Animal:
         self.__edad = edad
         self.__especie = especie
 
-    def get_nombre(self) -> str:
+    @property
+    def nombre(self) -> str:
         """Retorna el nombre del animal."""
         return self.__nombre
 
-    def get_edad(self) -> int:
+    @property
+    def edad(self) -> int:
         """Retorna la edad del animal."""
         return self.__edad
 
