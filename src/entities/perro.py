@@ -3,7 +3,7 @@ from typing import override
 from src.entities.animal import Animal
 
 
-class Gato(Animal):
+class Perro(Animal):
     def __init__(self, nombre: str, edad: int) -> None:
         super().__init__(nombre, edad, "Perro")
 
