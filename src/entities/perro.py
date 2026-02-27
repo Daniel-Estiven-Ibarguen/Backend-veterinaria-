@@ -11,5 +11,5 @@ class Gato(Animal):
     def emitir_sonido(self) -> str:
         return "Guau"
 
-    def cavar() -> None:
+    def cavar(self) -> None:
         print("El perro está cavando")
