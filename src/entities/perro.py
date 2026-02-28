@@ -1,11 +1,15 @@
+from typing import override
+
 from src.entities.animal import Animal
 
-class Gato(Animal):
+
+class Perro(Animal):
     def __init__(self, nombre: str, edad: int) -> None:
         super().__init__(nombre, edad, "Perro")
 
-    def hacer_sonido(self) -> str:
+    @override
+    def emitir_sonido(self) -> str:
         return "Guau"
 
-    def cavar() -> None:
+    def cavar(self) -> None:
         print("El perro está cavando")
