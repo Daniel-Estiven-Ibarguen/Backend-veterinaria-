@@ -11,7 +11,7 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.database import Base
-from src.models import Usuario
+from src.models import Usuario, Animal
 
 config = context.config
 
