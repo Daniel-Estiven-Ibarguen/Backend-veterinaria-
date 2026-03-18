@@ -5,3 +5,4 @@ from src.models.animal import Animal
 from src.models.gato import Gato
 from src.models.perro import Perro
 from src.models.cita import Cita
+from src.models.consulta import Consulta
