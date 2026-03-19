@@ -6,6 +6,21 @@ Sistema de gestión para una veterinaria que permite gestionar animales y citas 
 
 Este proyecto implementa un sistema de gestión para una veterinaria. Permite crear y consultar diferentes tipos de animales (gatos, perros y genéricos), y gestionar citas médicas con operaciones CRUD completas. Utiliza conceptos de Programación Orientada a Objetos (POO) para modelar la jerarquía de entidades.
 
+## Instalación
+
+Es necesario crear un entorno virtual e instalar las dependencias:
+
+```bash
+python -m venv .venv
+pip install -r requirements.txt
+```
+
+Adicionalmente, es necesario establecer las credenciales de acceso de la base de datos Postgres (Neon) en el archivo `.env`. Se puede usar el archivo `.env.example` como plantilla.
+
+```bash
+cp .env.example .env
+```
+
 ## Clases Implementadas
 
 ### Animal (Clase Base)
