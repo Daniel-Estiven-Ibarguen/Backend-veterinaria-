@@ -201,7 +201,121 @@ def eliminar_cita() -> None:
 
     citas.remove(cita)
     print(f"Cita #{id_input} eliminada correctamente")
+    
+# --- CRUD Usuarios ---
+def crear_usuario() -> None:
+    """Solicita los datos por consola y crea un nuevo usuario en la base de datos.
 
+    Valida que el rol ingresado sea 'veterinario' o 'admin' antes de guardar.
+    """
+    username = obtener_nombre("Username: ")
+    email = obtener_nombre("Email: ")
+    password_hash = obtener_nombre("Password hash: ")
+    nombre = obtener_nombre("Nombre completo: ")
+
+    while True:
+        rol = input("Rol (veterinario/admin): ").strip().lower()
+        if rol in ("veterinario", "admin"):
+            break
+        print("Error: El rol debe ser 'veterinario' o 'admin'")
+
+    db = SessionLocal()
+    try:
+        crud = UsuarioCrud(db)
+        usuario = crud.crear_usuario(username, email, password_hash, nombre, rol)
+        print(f"Usuario '{usuario.username}' creado con ID {usuario.id_usuario}")
+    finally:
+        db.close()
+
+
+def listar_usuarios() -> None:
+    """Consulta la base de datos y muestra todos los usuarios registrados por consola."""
+    db = SessionLocal()
+    try:
+        crud = UsuarioCrud(db)
+        usuarios = crud.listar_usuarios()
+        if not usuarios:
+            print("No hay usuarios registrados")
+            return
+        print("\n=== Usuarios Registrados ===")
+        for u in usuarios:
+            print(f"  [{u.id_usuario}] {u.username} | {u.email} | {u.nombre} | rol: {u.rol}")
+        print()
+    finally:
+        db.close()
+
+
+def actualizar_usuario() -> None:
+    """Solicita por consola qué campos modificar y actualiza el usuario en la base de datos.
+
+    Muestra la lista de usuarios, pide el ID a modificar y permite cambiar
+    nombre, email y rol. Los campos que se dejen en blanco no se modifican.
+    """
+    listar_usuarios()
+
+    while True:
+        id_input = input("ID del usuario a actualizar: ")
+        if es_entero_positivo(id_input):
+            break
+        print("Error: Ingrese un ID válido")
+
+    db = SessionLocal()
+    try:
+        crud = UsuarioCrud(db)
+        usuario = crud.buscar_usuario(int(id_input))
+        if not usuario:
+            print(f"No se encontró el usuario con ID {id_input}")
+            return
+
+        print(f"\nUsuario encontrado: {usuario.username} ({usuario.nombre})")
+        print("Deje en blanco para mantener el valor actual\n")
+
+        cambios = {}
+
+        nuevo_nombre = input(f"Nuevo nombre [{usuario.nombre}]: ").strip()
+        if nuevo_nombre:
+            cambios["nombre"] = nuevo_nombre
+
+        nuevo_email = input(f"Nuevo email [{usuario.email}]: ").strip()
+        if nuevo_email:
+            cambios["email"] = nuevo_email.lower()
+
+        nuevo_rol = input(f"Nuevo rol [{usuario.rol}] (veterinario/admin): ").strip().lower()
+        if nuevo_rol and nuevo_rol in ("veterinario", "admin"):
+            cambios["rol"] = nuevo_rol
+
+        if cambios:
+            crud.actualizar_usuario(int(id_input), **cambios)
+            print("Usuario actualizado correctamente")
+        else:
+            print("No se realizaron cambios")
+    finally:
+        db.close()
+
+
+def eliminar_usuario() -> None:
+    """Solicita un ID por consola y elimina el usuario correspondiente de la base de datos.
+
+    Muestra la lista de usuarios antes de pedir el ID para facilitar la selección.
+    """
+    listar_usuarios()
+
+    while True:
+        id_input = input("ID del usuario a eliminar: ")
+        if es_entero_positivo(id_input):
+            break
+        print("Error: Ingrese un ID válido")
+
+    db = SessionLocal()
+    try:
+        crud = UsuarioCrud(db)
+        eliminado = crud.eliminar_usuario(int(id_input))
+        if eliminado:
+            print(f"Usuario #{id_input} eliminado correctamente")
+        else:
+            print(f"No se encontró el usuario con ID {id_input}")
+    finally:
+        db.close()
 
 # --- Menú ---
 
