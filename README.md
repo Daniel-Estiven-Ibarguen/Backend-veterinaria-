@@ -110,3 +110,48 @@ Ejecutar `python main.py` y seleccionar una opción:
 
 ---
 9. Salir
+
+---
+
+## Base de Datos
+
+### Tecnología
+
+- **Neon**: PostgreSQL en la nube (https://neon.tech)
+- **SQLAlchemy**: ORM para gestión de modelos y relaciones
+- **Alembic**: Sistema de migraciones para evolución del esquema
+
+### Configuración
+
+1. Copiar el archivo de ejemplo:
+```bash
+cp .env.example .env
+```
+
+2. Editar `.env` con las credenciales de Neon:
+```
+DATABASE_URL=postgresql://usuario:contraseña@host.neon.tech/nombre_db?sslmode=require
+```
+
+### Migraciones
+
+Las migraciones se encuentran en el directorio `alembic/versions/`.
+
+**Comandos útiles:**
+
+```bash
+# Ver estado de migraciones
+alembic current
+
+# Crear una nueva migración
+alembic revision --autogenerate -m "descripcion_del_cambio"
+
+# Aplicar migraciones pendientes
+alembic upgrade head
+
+# Revertir última migración
+alembic downgrade -1
+
+# Ver historial de migraciones
+alembic history
+```
