@@ -11,6 +11,7 @@ Proporciona operaciones CRUD conectadas a la base de datos:
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from src.database import get_db
 from src.crud.consulta_crud import ConsultaCrud
@@ -76,24 +77,34 @@ async def crear_consulta(request: ConsultaRequest, db: Session = Depends(get_db)
 
     Returns:
         Consulta creada con ID asignado.
+
+    Raises:
+        HTTPException: Si la cita, animal, veterinario o usuario no existen.
     """
     crud = ConsultaCrud(db)
-    consulta = crud.crear_consulta(
-        fecha=request.fecha,
-        diagnostico=request.diagnostico,
-        tratamiento=request.tratamiento,
-        observaciones=request.observaciones,
-        tipo_consulta=request.tipo_consulta,
-        motivo_revision=request.motivo_revision,
-        proxima_cita=request.proxima_cita,
-        nivel_urgencia=request.nivel_urgencia,
-        sintomas=request.sintomas,
-        id_cita=request.id_cita,
-        id_animal=request.id_animal,
-        id_veterinario=request.id_veterinario,
-        id_usuario_creacion=request.id_usuario_creacion,
-    )
-    return consulta
+    try:
+        consulta = crud.crear_consulta(
+            fecha=request.fecha,
+            diagnostico=request.diagnostico,
+            tratamiento=request.tratamiento,
+            observaciones=request.observaciones,
+            tipo_consulta=request.tipo_consulta,
+            motivo_revision=request.motivo_revision,
+            proxima_cita=request.proxima_cita,
+            nivel_urgencia=request.nivel_urgencia,
+            sintomas=request.sintomas,
+            id_cita=request.id_cita,
+            id_animal=request.id_animal,
+            id_veterinario=request.id_veterinario,
+            id_usuario_creacion=request.id_usuario_creacion,
+        )
+        return consulta
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="La cita, animal, veterinario o usuario no existen"
+        )
 
 
 @router.put("/{id}", response_model=ConsultaResponse)
@@ -113,14 +124,23 @@ async def actualizar_consulta(
         Consulta con los campos actualizados.
 
     Raises:
-        HTTPException: Si no se encuentra la consulta.
+        HTTPException: Si no se encuentra la consulta o el usuario no existe.
     """
     crud = ConsultaCrud(db)
     update_data = request.model_dump(exclude_unset=True)
-    consulta = crud.actualizar_consulta(id, **update_data)
-    if not consulta:
-        raise HTTPException(status_code=404, detail="Consulta no encontrada")
-    return consulta
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    try:
+        consulta = crud.actualizar_consulta(id, **update_data)
+        if not consulta:
+            raise HTTPException(status_code=404, detail="Consulta no encontrada")
+        return consulta
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de edición no existe"
+        )
 
 
 @router.delete("/{id}", response_model=ConsultaDeleteResponse)

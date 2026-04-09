@@ -100,7 +100,30 @@ class ConsultaResponse(BaseModel):
         fecha_edicion: Fecha y hora de última edición (opcional).
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "fecha": "2026-04-15",
+                "diagnostico": "Control de salud general",
+                "tratamiento": "Vacunas al día",
+                "observaciones": "Animal en buen estado",
+                "tipo_consulta": "revision",
+                "motivo_revision": "Chequeo anual",
+                "proxima_cita": "2026-10-15",
+                "nivel_urgencia": None,
+                "sintomas": None,
+                "id_cita": 1,
+                "id_animal": 1,
+                "id_veterinario": 1,
+                "id_usuario_creacion": 1,
+                "id_usuario_edita": None,
+                "fecha_creacion": "2026-01-15T10:30:00",
+                "fecha_edicion": None
+            }
+        }
+    )
 
     id: int
     fecha: date

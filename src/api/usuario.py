@@ -11,6 +11,7 @@ Proporciona operaciones CRUD conectadas a la base de datos:
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from src.database import get_db
 from src.crud.usuario_crud import UsuarioCrud
@@ -76,16 +77,26 @@ async def crear_usuario(request: UsuarioRequest, db: Session = Depends(get_db)):
 
     Returns:
         Usuario creado con ID asignado.
+
+    Raises:
+        HTTPException: Si el username o email ya existen.
     """
     crud = UsuarioCrud(db)
-    usuario = crud.crear_usuario(
-        username=request.username,
-        email=request.email,
-        password_hash=request.password_hash,
-        nombre=request.nombre,
-        rol=request.rol,
-    )
-    return usuario
+    try:
+        usuario = crud.crear_usuario(
+            username=request.username,
+            email=request.email,
+            password_hash=request.password_hash,
+            nombre=request.nombre,
+            rol=request.rol,
+        )
+        return usuario
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="El username o email ya existen en el sistema"
+        )
 
 
 @router.put("/{id_usuario}", response_model=UsuarioResponse)
@@ -105,14 +116,23 @@ async def actualizar_usuario(
         Usuario con los campos actualizados.
 
     Raises:
-        HTTPException: Si no se encuentra el usuario.
+        HTTPException: Si no se encuentra el usuario o si el username/email ya existen.
     """
     crud = UsuarioCrud(db)
     update_data = request.model_dump(exclude_unset=True)
-    usuario = crud.actualizar_usuario(id_usuario, **update_data)
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return usuario
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    try:
+        usuario = crud.actualizar_usuario(id_usuario, **update_data)
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return usuario
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="El username o email ya existen en el sistema"
+        )
 
 
 @router.delete("/{id_usuario}", response_model=UsuarioDeleteResponse)

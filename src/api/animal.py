@@ -11,6 +11,7 @@ Proporciona operaciones CRUD conectadas a la base de datos:
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from src.database import get_db
 from src.crud.animal_crud import AnimalCrud
@@ -80,16 +81,26 @@ async def crear_animal(request: AnimalRequest, db: Session = Depends(get_db)):
 
     Returns:
         Animal creado con ID asignado.
+
+    Raises:
+        HTTPException: Si el usuario de creación no existe.
     """
     crud = AnimalCrud(db)
-    animal = crud.crear_animal(
-        nombre=request.nombre,
-        edad=request.edad,
-        especie=request.especie,
-        tipo=request.tipo,
-        id_usuario_creacion=request.id_usuario_creacion,
-    )
-    return animal
+    try:
+        animal = crud.crear_animal(
+            nombre=request.nombre,
+            edad=request.edad,
+            especie=request.especie,
+            tipo=request.tipo,
+            id_usuario_creacion=request.id_usuario_creacion,
+        )
+        return animal
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de creación no existe"
+        )
 
 
 @router.put("/{id}", response_model=AnimalResponse)
@@ -109,14 +120,23 @@ async def actualizar_animal(
         Animal con los campos actualizados.
 
     Raises:
-        HTTPException: Si no se encuentra el animal.
+        HTTPException: Si no se encuentra el animal o el usuario no existe.
     """
     crud = AnimalCrud(db)
     update_data = request.model_dump(exclude_unset=True)
-    animal = crud.actualizar_animal(id, **update_data)
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal no encontrado")
-    return animal
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    try:
+        animal = crud.actualizar_animal(id, **update_data)
+        if not animal:
+            raise HTTPException(status_code=404, detail="Animal no encontrado")
+        return animal
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de edición no existe"
+        )
 
 
 @router.delete("/{id}", response_model=AnimalDeleteResponse)
@@ -150,15 +170,25 @@ async def crear_gato(request: GatoRequest, db: Session = Depends(get_db)):
 
     Returns:
         Gato creado con ID asignado.
+
+    Raises:
+        HTTPException: Si el usuario de creación no existe.
     """
     crud = AnimalCrud(db)
-    gato = crud.crear_gato(
-        nombre=request.nombre,
-        edad=request.edad,
-        especie=request.especie,
-        id_usuario_creacion=request.id_usuario_creacion,
-    )
-    return gato
+    try:
+        gato = crud.crear_gato(
+            nombre=request.nombre,
+            edad=request.edad,
+            especie=request.especie,
+            id_usuario_creacion=request.id_usuario_creacion,
+        )
+        return gato
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de creación no existe"
+        )
 
 
 @router.post("/perros", response_model=PerroResponse, status_code=201)
@@ -171,12 +201,22 @@ async def crear_perro(request: PerroRequest, db: Session = Depends(get_db)):
 
     Returns:
         Perro creado con ID asignado.
+
+    Raises:
+        HTTPException: Si el usuario de creación no existe.
     """
     crud = AnimalCrud(db)
-    perro = crud.crear_perro(
-        nombre=request.nombre,
-        edad=request.edad,
-        especie=request.especie,
-        id_usuario_creacion=request.id_usuario_creacion,
-    )
-    return perro
+    try:
+        perro = crud.crear_perro(
+            nombre=request.nombre,
+            edad=request.edad,
+            especie=request.especie,
+            id_usuario_creacion=request.id_usuario_creacion,
+        )
+        return perro
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de creación no existe"
+        )

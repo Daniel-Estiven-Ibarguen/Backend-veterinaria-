@@ -62,7 +62,20 @@ class UsuarioResponse(BaseModel):
         fecha_edicion: Fecha y hora de última edición (opcional).
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id_usuario": 1,
+                "username": "admin1",
+                "email": "admin1@example.com",
+                "nombre": "Admin Principal",
+                "rol": "veterinario",
+                "fecha_creacion": "2026-01-15T10:30:00",
+                "fecha_edicion": None
+            }
+        }
+    )
 
     id_usuario: int
     username: str

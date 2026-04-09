@@ -11,6 +11,7 @@ Proporciona operaciones CRUD conectadas a la base de datos:
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from src.database import get_db
 from src.crud.cita_crud import CitaCrud
@@ -76,18 +77,28 @@ async def crear_cita(request: CitaRequest, db: Session = Depends(get_db)):
 
     Returns:
         Cita creada con ID asignado.
+
+    Raises:
+        HTTPException: Si el animal o usuario no existen.
     """
     crud = CitaCrud(db)
-    cita = crud.crear_cita(
-        fecha=request.fecha,
-        hora=request.hora,
-        id_animal=request.id_animal,
-        id_veterinario=request.id_veterinario,
-        tipo=request.tipo,
-        estado=request.estado,
-        id_usuario_creacion=request.id_usuario_creacion,
-    )
-    return cita
+    try:
+        cita = crud.crear_cita(
+            fecha=request.fecha,
+            hora=request.hora,
+            id_animal=request.id_animal,
+            id_veterinario=request.id_veterinario,
+            tipo=request.tipo,
+            estado=request.estado,
+            id_usuario_creacion=request.id_usuario_creacion,
+        )
+        return cita
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El animal, veterinario o usuario no existen"
+        )
 
 
 @router.put("/{id}", response_model=CitaResponse)
@@ -107,14 +118,23 @@ async def actualizar_cita(
         Cita con los campos actualizados.
 
     Raises:
-        HTTPException: Si no se encuentra la cita.
+        HTTPException: Si no se encuentra la cita o el usuario no existe.
     """
     crud = CitaCrud(db)
     update_data = request.model_dump(exclude_unset=True)
-    cita = crud.actualizar_cita(id, **update_data)
-    if not cita:
-        raise HTTPException(status_code=404, detail="Cita no encontrada")
-    return cita
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+    try:
+        cita = crud.actualizar_cita(id, **update_data)
+        if not cita:
+            raise HTTPException(status_code=404, detail="Cita no encontrada")
+        return cita
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=404,
+            detail="El usuario de edición no existe"
+        )
 
 
 @router.delete("/{id}", response_model=CitaDeleteResponse)
