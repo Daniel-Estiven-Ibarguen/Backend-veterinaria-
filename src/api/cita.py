@@ -1,7 +1,7 @@
 """
 Endpoints API para la entidad Cita.
 
-Proporciona operaciones CRUD mockeadas:
+Proporciona operaciones CRUD conectadas a la base de datos:
 - GET /citas - Lista todas las citas
 - GET /citas/{id} - Obtiene una cita por ID
 - POST /citas - Crea una nueva cita
@@ -9,11 +9,11 @@ Proporciona operaciones CRUD mockeadas:
 - DELETE /citas/{id} - Elimina una cita
 """
 
-from datetime import date, time, datetime
-from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, HTTPException, Path
-
+from src.database import get_db
+from src.crud.cita_crud import CitaCrud
 from src.schemas.cita import (
     CitaRequest,
     CitaUpdateRequest,
@@ -23,68 +23,35 @@ from src.schemas.cita import (
 
 router = APIRouter(prefix="/citas", tags=["citas"])
 
-MOCK_CITAS = [
-    {
-        "id": 1,
-        "fecha": date(2024, 3, 15),
-        "hora": time(10, 0),
-        "tipo": "revision",
-        "estado": "confirmada",
-        "id_animal": 1,
-        "id_veterinario": 1,
-        "id_usuario_creacion": 1,
-        "id_usuario_edita": None,
-        "fecha_creacion": datetime(2024, 3, 1, 9, 0, 0),
-        "fecha_edicion": None,
-    },
-    {
-        "id": 2,
-        "fecha": date(2024, 3, 16),
-        "hora": time(11, 30),
-        "tipo": "urgencias",
-        "estado": "pendiente",
-        "id_animal": 2,
-        "id_veterinario": 1,
-        "id_usuario_creacion": 1,
-        "id_usuario_edita": None,
-        "fecha_creacion": datetime(2024, 3, 2, 14, 30, 0),
-        "fecha_edicion": None,
-    },
-    {
-        "id": 3,
-        "fecha": date(2024, 3, 17),
-        "hora": time(16, 0),
-        "tipo": "revision",
-        "estado": "pendiente",
-        "id_animal": 3,
-        "id_veterinario": 2,
-        "id_usuario_creacion": 2,
-        "id_usuario_edita": None,
-        "fecha_creacion": datetime(2024, 3, 3, 8, 15, 0),
-        "fecha_edicion": None,
-    },
-]
-
 
 @router.get("", response_model=dict)
-async def listar_citas():
+async def listar_citas(db: Session = Depends(get_db)):
     """Lista todas las citas registradas.
+
+    Args:
+        db: Sesión de base de datos.
 
     Returns:
         Diccionario con total y lista de citas.
     """
+    crud = CitaCrud(db)
+    citas = crud.listar_citas()
     return {
-        "total": len(MOCK_CITAS),
-        "items": MOCK_CITAS,
+        "total": len(citas),
+        "items": citas,
     }
 
 
 @router.get("/{id}", response_model=CitaResponse)
-async def obtener_cita(id: int = Path(..., description="ID de la cita")):
+async def obtener_cita(
+    id: int = Path(..., description="ID de la cita"),
+    db: Session = Depends(get_db),
+):
     """Obtiene una cita por su ID.
 
     Args:
         id: Identificador único de la cita.
+        db: Sesión de base de datos.
 
     Returns:
         Datos de la cita encontrada.
@@ -92,48 +59,49 @@ async def obtener_cita(id: int = Path(..., description="ID de la cita")):
     Raises:
         HTTPException: Si no se encuentra la cita.
     """
-    for cita in MOCK_CITAS:
-        if cita["id"] == id:
-            return cita
-    raise HTTPException(status_code=404, detail="Cita no encontrada")
+    crud = CitaCrud(db)
+    cita = crud.buscar_cita(id)
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return cita
 
 
 @router.post("", response_model=CitaResponse, status_code=201)
-async def crear_cita(request: CitaRequest):
+async def crear_cita(request: CitaRequest, db: Session = Depends(get_db)):
     """Crea una nueva cita.
 
     Args:
         request: Datos de la cita a crear.
+        db: Sesión de base de datos.
 
     Returns:
         Cita creada con ID asignado.
     """
-    nuevo_id = max(c["id"] for c in MOCK_CITAS) + 1
-    return {
-        "id": nuevo_id,
-        "fecha": request.fecha,
-        "hora": request.hora,
-        "tipo": request.tipo,
-        "estado": request.estado,
-        "id_animal": request.id_animal,
-        "id_veterinario": request.id_veterinario,
-        "id_usuario_creacion": request.id_usuario_creacion,
-        "id_usuario_edita": None,
-        "fecha_creacion": datetime.now(),
-        "fecha_edicion": None,
-    }
+    crud = CitaCrud(db)
+    cita = crud.crear_cita(
+        fecha=request.fecha,
+        hora=request.hora,
+        id_animal=request.id_animal,
+        id_veterinario=request.id_veterinario,
+        tipo=request.tipo,
+        estado=request.estado,
+        id_usuario_creacion=request.id_usuario_creacion,
+    )
+    return cita
 
 
 @router.put("/{id}", response_model=CitaResponse)
 async def actualizar_cita(
     id: int,
     request: CitaUpdateRequest,
+    db: Session = Depends(get_db),
 ):
     """Actualiza una cita existente.
 
     Args:
         id: ID de la cita a actualizar.
         request: Campos a actualizar (todos opcionales).
+        db: Sesión de base de datos.
 
     Returns:
         Cita con los campos actualizados.
@@ -141,21 +109,21 @@ async def actualizar_cita(
     Raises:
         HTTPException: Si no se encuentra la cita.
     """
-    for cita in MOCK_CITAS:
-        if cita["id"] == id:
-            update_data = request.model_dump(exclude_unset=True)
-            cita.update(update_data)
-            cita["fecha_edicion"] = datetime.now()
-            return cita
-    raise HTTPException(status_code=404, detail="Cita no encontrada")
+    crud = CitaCrud(db)
+    update_data = request.model_dump(exclude_unset=True)
+    cita = crud.actualizar_cita(id, **update_data)
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return cita
 
 
 @router.delete("/{id}", response_model=CitaDeleteResponse)
-async def eliminar_cita(id: int):
+async def eliminar_cita(id: int, db: Session = Depends(get_db)):
     """Elimina una cita por su ID.
 
     Args:
         id: ID de la cita a eliminar.
+        db: Sesión de base de datos.
 
     Returns:
         Confirmación de eliminación.
@@ -163,7 +131,8 @@ async def eliminar_cita(id: int):
     Raises:
         HTTPException: Si no se encuentra la cita.
     """
-    for cita in MOCK_CITAS:
-        if cita["id"] == id:
-            return {"id": id, "eliminado": True}
-    raise HTTPException(status_code=404, detail="Cita no encontrada")
+    crud = CitaCrud(db)
+    eliminado = crud.eliminar_cita(id)
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return {"id": id, "eliminado": True}

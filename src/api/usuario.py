@@ -1,7 +1,7 @@
 """
 Endpoints API para la entidad Usuario.
 
-Proporciona operaciones CRUD mockeadas:
+Proporciona operaciones CRUD conectadas a la base de datos:
 - GET /usuarios - Lista todos los usuarios
 - GET /usuarios/{id} - Obtiene un usuario por ID
 - POST /usuarios - Crea un nuevo usuario
@@ -9,12 +9,11 @@ Proporciona operaciones CRUD mockeadas:
 - DELETE /usuarios/{id} - Elimina un usuario
 """
 
-from datetime import datetime
-from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, HTTPException, Path
-from fastapi.responses import JSONResponse
-
+from src.database import get_db
+from src.crud.usuario_crud import UsuarioCrud
 from src.schemas.usuario import (
     UsuarioRequest,
     UsuarioUpdateRequest,
@@ -24,47 +23,35 @@ from src.schemas.usuario import (
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
-MOCK_USUARIOS = [
-    {
-        "id_usuario": 1,
-        "username": "drgarcia",
-        "email": "drgarcia@vet.cl",
-        "nombre": "Dr. María García",
-        "rol": "veterinario",
-        "fecha_creacion": datetime(2024, 1, 15, 8, 30, 0),
-        "fecha_edicion": None,
-    },
-    {
-        "id_usuario": 2,
-        "username": "adminvet",
-        "email": "admin@vet.cl",
-        "nombre": "Carlos Admin",
-        "rol": "admin",
-        "fecha_creacion": datetime(2024, 1, 10, 9, 0, 0),
-        "fecha_edicion": datetime(2024, 2, 20, 14, 30, 0),
-    },
-]
-
 
 @router.get("", response_model=dict)
-async def listar_usuarios():
+async def listar_usuarios(db: Session = Depends(get_db)):
     """Lista todos los usuarios registrados.
+
+    Args:
+        db: Sesión de base de datos.
 
     Returns:
         Diccionario con total y lista de usuarios.
     """
+    crud = UsuarioCrud(db)
+    usuarios = crud.listar_usuarios()
     return {
-        "total": len(MOCK_USUARIOS),
-        "items": MOCK_USUARIOS,
+        "total": len(usuarios),
+        "items": usuarios,
     }
 
 
 @router.get("/{id_usuario}", response_model=UsuarioResponse)
-async def obtener_usuario(id_usuario: int = Path(..., description="ID del usuario")):
+async def obtener_usuario(
+    id_usuario: int = Path(..., description="ID del usuario"),
+    db: Session = Depends(get_db),
+):
     """Obtiene un usuario por su ID.
 
     Args:
         id_usuario: Identificador único del usuario.
+        db: Sesión de base de datos.
 
     Returns:
         Datos del usuario encontrado.
@@ -72,44 +59,47 @@ async def obtener_usuario(id_usuario: int = Path(..., description="ID del usuari
     Raises:
         HTTPException: Si no se encuentra el usuario.
     """
-    for usuario in MOCK_USUARIOS:
-        if usuario["id_usuario"] == id_usuario:
-            return usuario
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    crud = UsuarioCrud(db)
+    usuario = crud.buscar_usuario(id_usuario)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
 
 
 @router.post("", response_model=UsuarioResponse, status_code=201)
-async def crear_usuario(request: UsuarioRequest):
+async def crear_usuario(request: UsuarioRequest, db: Session = Depends(get_db)):
     """Crea un nuevo usuario.
 
     Args:
         request: Datos del usuario a crear.
+        db: Sesión de base de datos.
 
     Returns:
         Usuario creado con ID asignado.
     """
-    nuevo_id = max(u["id_usuario"] for u in MOCK_USUARIOS) + 1
-    return {
-        "id_usuario": nuevo_id,
-        "username": request.username,
-        "email": request.email,
-        "nombre": request.nombre,
-        "rol": request.rol,
-        "fecha_creacion": datetime.now(),
-        "fecha_edicion": None,
-    }
+    crud = UsuarioCrud(db)
+    usuario = crud.crear_usuario(
+        username=request.username,
+        email=request.email,
+        password_hash=request.password_hash,
+        nombre=request.nombre,
+        rol=request.rol,
+    )
+    return usuario
 
 
 @router.put("/{id_usuario}", response_model=UsuarioResponse)
 async def actualizar_usuario(
     id_usuario: int,
     request: UsuarioUpdateRequest,
+    db: Session = Depends(get_db),
 ):
     """Actualiza un usuario existente.
 
     Args:
         id_usuario: ID del usuario a actualizar.
         request: Campos a actualizar (todos opcionales).
+        db: Sesión de base de datos.
 
     Returns:
         Usuario con los campos actualizados.
@@ -117,21 +107,21 @@ async def actualizar_usuario(
     Raises:
         HTTPException: Si no se encuentra el usuario.
     """
-    for usuario in MOCK_USUARIOS:
-        if usuario["id_usuario"] == id_usuario:
-            update_data = request.model_dump(exclude_unset=True)
-            usuario.update(update_data)
-            usuario["fecha_edicion"] = datetime.now()
-            return usuario
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    crud = UsuarioCrud(db)
+    update_data = request.model_dump(exclude_unset=True)
+    usuario = crud.actualizar_usuario(id_usuario, **update_data)
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
 
 
 @router.delete("/{id_usuario}", response_model=UsuarioDeleteResponse)
-async def eliminar_usuario(id_usuario: int):
+async def eliminar_usuario(id_usuario: int, db: Session = Depends(get_db)):
     """Elimina un usuario por su ID.
 
     Args:
         id_usuario: ID del usuario a eliminar.
+        db: Sesión de base de datos.
 
     Returns:
         Confirmación de eliminación.
@@ -139,7 +129,8 @@ async def eliminar_usuario(id_usuario: int):
     Raises:
         HTTPException: Si no se encuentra el usuario.
     """
-    for usuario in MOCK_USUARIOS:
-        if usuario["id_usuario"] == id_usuario:
-            return {"id_usuario": id_usuario, "eliminado": True}
-    raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    crud = UsuarioCrud(db)
+    eliminado = crud.eliminar_usuario(id_usuario)
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"id_usuario": id_usuario, "eliminado": True}
