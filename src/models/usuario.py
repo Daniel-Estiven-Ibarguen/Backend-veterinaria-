@@ -12,9 +12,15 @@ Atributos:
 - password_hash: Hash de la contraseña
 - nombre: Nombre completo del usuario
 - rol: Rol del usuario (veterinario, admin, etc.)
+- fecha_creacion: Fecha y hora de creación
+- fecha_edicion: Fecha y hora de edición (opcional)
 """
 
-from sqlalchemy import Column, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql import func
+
 from src.database import Base
 
 
@@ -27,3 +33,13 @@ class Usuario(Base):
     password_hash = Column(String(255), nullable=False)
     nombre = Column(String(100), nullable=False)
     rol = Column(String(20), nullable=False, default="veterinario")
+    fecha_creacion = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    fecha_edicion = Column(
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        nullable=True
+    )
