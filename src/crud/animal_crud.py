@@ -173,7 +173,6 @@ class AnimalCrud:
                 setattr(animal, key, value)
 
         self.db.commit()
-        self.db.refresh(animal)
         return animal
 
     def eliminar_animal(self, id: int) -> bool:

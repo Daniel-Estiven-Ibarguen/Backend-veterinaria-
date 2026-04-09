@@ -112,7 +112,6 @@ class UsuarioCrud:
                 setattr(usuario, key, value)
 
         self.db.commit()
-        self.db.refresh(usuario)
         return usuario
 
     def eliminar_usuario(self, id_usuario: int) -> bool:

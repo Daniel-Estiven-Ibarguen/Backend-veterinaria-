@@ -99,7 +99,6 @@ class CitaCrud:
                 setattr(cita, key, value)
 
         self.db.commit()
-        self.db.refresh(cita)
         return cita
 
     def eliminar_cita(self, id: int) -> bool:

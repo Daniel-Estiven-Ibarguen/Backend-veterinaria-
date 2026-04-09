@@ -117,7 +117,6 @@ class ConsultaCrud:
                 setattr(consulta, key, value)
 
         self.db.commit()
-        self.db.refresh(consulta)
         return consulta
 
     def eliminar_consulta(self, id: int) -> bool:
