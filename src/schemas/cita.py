@@ -1,0 +1,99 @@
+"""
+Esquemas Pydantic para la entidad Cita.
+
+Contiene los modelos de request y response para las operaciones
+CRUD de citas: crear, listar, obtener por id, actualizar y eliminar.
+"""
+
+from datetime import date, time, datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict
+
+
+class CitaRequest(BaseModel):
+    """Modelo de petición para crear una cita.
+
+    Args:
+        fecha: Fecha de la cita.
+        hora: Hora de la cita.
+        tipo: Tipo de cita (default: 'revision').
+        estado: Estado de la cita (default: 'pendiente').
+        id_animal: ID del animal asociado.
+        id_veterinario: ID del veterinario asignado.
+        id_usuario_creacion: ID del usuario que crea el registro.
+    """
+
+    fecha: date
+    hora: time
+    tipo: str = "revision"
+    estado: str = "pendiente"
+    id_animal: int
+    id_veterinario: int
+    id_usuario_creacion: int
+
+
+class CitaUpdateRequest(BaseModel):
+    """Modelo de petición para actualizar una cita.
+
+    Todos los campos son opcionales para permitir actualizaciones parciales.
+
+    Args:
+        fecha: Nueva fecha (opcional).
+        hora: Nueva hora (opcional).
+        tipo: Nuevo tipo (opcional).
+        estado: Nuevo estado (opcional).
+        id_usuario_edita: ID del usuario que edita (opcional).
+    """
+
+    fecha: Optional[date] = None
+    hora: Optional[time] = None
+    tipo: Optional[str] = None
+    estado: Optional[str] = None
+    id_usuario_edita: Optional[int] = None
+
+
+class CitaResponse(BaseModel):
+    """Modelo de respuesta para obtener una cita.
+
+    Incluye todos los campos de la cita incluyendo los de auditoría.
+
+    Args:
+        id: Identificador único de la cita.
+        fecha: Fecha de la cita.
+        hora: Hora de la cita.
+        tipo: Tipo de cita.
+        estado: Estado de la cita.
+        id_animal: ID del animal asociado.
+        id_veterinario: ID del veterinario asignado.
+        id_usuario_creacion: ID del usuario que creó el registro.
+        id_usuario_edita: ID del usuario que editó (opcional).
+        fecha_creacion: Fecha y hora de creación.
+        fecha_edicion: Fecha y hora de última edición (opcional).
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    fecha: date
+    hora: time
+    tipo: str
+    estado: str
+    id_animal: int
+    id_veterinario: int
+    id_usuario_creacion: int
+    id_usuario_edita: Optional[int] = None
+    fecha_creacion: datetime
+    fecha_edicion: Optional[datetime] = None
+
+
+class CitaDeleteResponse(BaseModel):
+    """Modelo de respuesta tras eliminar una cita.
+
+    Args:
+        id: Identificador de la cita eliminada.
+        eliminado: Indica que la eliminación fue exitosa.
+    """
+
+    id: int
+    eliminado: bool = True
