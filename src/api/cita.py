@@ -20,12 +20,13 @@ from src.schemas.cita import (
     CitaUpdateRequest,
     CitaResponse,
     CitaDeleteResponse,
+    CitaListResponse,
 )
 
 router = APIRouter(prefix="/citas", tags=["citas"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=CitaListResponse)
 async def listar_citas(db: Session = Depends(get_db)):
     """Lista todas las citas registradas.
 

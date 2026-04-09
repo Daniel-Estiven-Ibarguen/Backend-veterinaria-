@@ -20,12 +20,13 @@ from src.schemas.consulta import (
     ConsultaUpdateRequest,
     ConsultaResponse,
     ConsultaDeleteResponse,
+    ConsultaListResponse,
 )
 
 router = APIRouter(prefix="/consultas", tags=["consultas"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=ConsultaListResponse)
 async def listar_consultas(db: Session = Depends(get_db)):
     """Lista todas las consultas registradas.
 

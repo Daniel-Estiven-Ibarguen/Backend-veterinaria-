@@ -20,6 +20,7 @@ from src.schemas.animal import (
     AnimalUpdateRequest,
     AnimalResponse,
     AnimalDeleteResponse,
+    AnimalListResponse,
     GatoRequest,
     GatoResponse,
     PerroRequest,
@@ -29,7 +30,7 @@ from src.schemas.animal import (
 router = APIRouter(prefix="/animales", tags=["animales"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=AnimalListResponse)
 async def listar_animales(db: Session = Depends(get_db)):
     """Lista todos los animales registrados.
 

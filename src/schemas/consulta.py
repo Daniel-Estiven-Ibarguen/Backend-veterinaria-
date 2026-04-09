@@ -154,3 +154,44 @@ class ConsultaDeleteResponse(BaseModel):
 
     id: int
     eliminado: bool = True
+
+
+class ConsultaListResponse(BaseModel):
+    """Modelo de respuesta para listar consultas.
+
+    Args:
+        total: Número total de consultas.
+        items: Lista de consultas.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total": 2,
+                "items": [
+                    {
+                        "id": 1,
+                        "fecha": "2026-04-15",
+                        "diagnostico": "Control de salud general",
+                        "tratamiento": "Vacunas al día",
+                        "observaciones": "Animal en buen estado",
+                        "tipo_consulta": "revision",
+                        "motivo_revision": "Chequeo anual",
+                        "proxima_cita": "2026-10-15",
+                        "nivel_urgencia": None,
+                        "sintomas": None,
+                        "id_cita": 1,
+                        "id_animal": 1,
+                        "id_veterinario": 1,
+                        "id_usuario_creacion": 1,
+                        "id_usuario_edita": None,
+                        "fecha_creacion": "2026-01-15T10:30:00",
+                        "fecha_edicion": None
+                    }
+                ]
+            }
+        }
+    )
+
+    total: int
+    items: list[ConsultaResponse]

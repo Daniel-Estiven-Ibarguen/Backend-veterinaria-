@@ -156,3 +156,47 @@ class AnimalDeleteResponse(BaseModel):
 
     id: int
     eliminado: bool = True
+
+
+class AnimalListResponse(BaseModel):
+    """Modelo de respuesta para listar animales.
+
+    Args:
+        total: Número total de animales.
+        items: Lista de animales.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total": 2,
+                "items": [
+                    {
+                        "id": 1,
+                        "nombre": "Max",
+                        "edad": 5,
+                        "especie": "canino",
+                        "tipo": "perro",
+                        "id_usuario_creacion": 1,
+                        "id_usuario_edita": None,
+                        "fecha_creacion": "2026-01-15T10:30:00",
+                        "fecha_edicion": None
+                    },
+                    {
+                        "id": 2,
+                        "nombre": "Luna",
+                        "edad": 3,
+                        "especie": "felino",
+                        "tipo": "gato",
+                        "id_usuario_creacion": 1,
+                        "id_usuario_edita": None,
+                        "fecha_creacion": "2026-01-16T11:00:00",
+                        "fecha_edicion": None
+                    }
+                ]
+            }
+        }
+    )
+
+    total: int
+    items: list[AnimalResponse]

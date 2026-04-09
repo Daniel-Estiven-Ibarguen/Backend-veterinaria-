@@ -114,3 +114,51 @@ class CitaDeleteResponse(BaseModel):
 
     id: int
     eliminado: bool = True
+
+
+class CitaListResponse(BaseModel):
+    """Modelo de respuesta para listar citas.
+
+    Args:
+        total: Número total de citas.
+        items: Lista de citas.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total": 2,
+                "items": [
+                    {
+                        "id": 1,
+                        "fecha": "2026-04-15",
+                        "hora": "10:30:00",
+                        "tipo": "revision",
+                        "estado": "pendiente",
+                        "id_animal": 1,
+                        "id_veterinario": 1,
+                        "id_usuario_creacion": 1,
+                        "id_usuario_edita": None,
+                        "fecha_creacion": "2026-01-15T10:30:00",
+                        "fecha_edicion": None
+                    },
+                    {
+                        "id": 2,
+                        "fecha": "2026-04-20",
+                        "hora": "14:00:00",
+                        "tipo": "urgencia",
+                        "estado": "confirmada",
+                        "id_animal": 2,
+                        "id_veterinario": 1,
+                        "id_usuario_creacion": 1,
+                        "id_usuario_edita": None,
+                        "fecha_creacion": "2026-01-16T11:00:00",
+                        "fecha_edicion": None
+                    }
+                ]
+            }
+        }
+    )
+
+    total: int
+    items: list[CitaResponse]

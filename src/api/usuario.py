@@ -20,12 +20,13 @@ from src.schemas.usuario import (
     UsuarioUpdateRequest,
     UsuarioResponse,
     UsuarioDeleteResponse,
+    UsuarioListResponse,
 )
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=UsuarioListResponse)
 async def listar_usuarios(db: Session = Depends(get_db)):
     """Lista todos los usuarios registrados.
 

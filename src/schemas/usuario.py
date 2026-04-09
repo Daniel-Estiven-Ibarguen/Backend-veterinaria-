@@ -96,3 +96,43 @@ class UsuarioDeleteResponse(BaseModel):
 
     id_usuario: int
     eliminado: bool = True
+
+
+class UsuarioListResponse(BaseModel):
+    """Modelo de respuesta para listar usuarios.
+
+    Args:
+        total: Número total de usuarios.
+        items: Lista de usuarios.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "total": 2,
+                "items": [
+                    {
+                        "id_usuario": 1,
+                        "username": "admin1",
+                        "email": "admin1@example.com",
+                        "nombre": "Admin Principal",
+                        "rol": "veterinario",
+                        "fecha_creacion": "2026-01-15T10:30:00",
+                        "fecha_edicion": None
+                    },
+                    {
+                        "id_usuario": 2,
+                        "username": "vet1",
+                        "email": "vet1@example.com",
+                        "nombre": "Veterinario Uno",
+                        "rol": "veterinario",
+                        "fecha_creacion": "2026-01-16T11:00:00",
+                        "fecha_edicion": None
+                    }
+                ]
+            }
+        }
+    )
+
+    total: int
+    items: list[UsuarioResponse]
