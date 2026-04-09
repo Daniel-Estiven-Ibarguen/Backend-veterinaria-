@@ -38,7 +38,7 @@ async def listar_consultas(db: Session = Depends(get_db)):
     consultas = crud.listar_consultas()
     return {
         "total": len(consultas),
-        "items": consultas,
+        "items": [ConsultaResponse.model_validate(c) for c in consultas],
     }
 
 

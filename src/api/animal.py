@@ -42,7 +42,7 @@ async def listar_animales(db: Session = Depends(get_db)):
     animales = crud.listar_animales()
     return {
         "total": len(animales),
-        "items": animales,
+        "items": [AnimalResponse.model_validate(a) for a in animales],
     }
 
 

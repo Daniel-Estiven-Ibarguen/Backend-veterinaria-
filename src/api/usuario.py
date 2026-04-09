@@ -38,7 +38,7 @@ async def listar_usuarios(db: Session = Depends(get_db)):
     usuarios = crud.listar_usuarios()
     return {
         "total": len(usuarios),
-        "items": usuarios,
+        "items": [UsuarioResponse.model_validate(u) for u in usuarios],
     }
 
 

@@ -38,7 +38,7 @@ async def listar_citas(db: Session = Depends(get_db)):
     citas = crud.listar_citas()
     return {
         "total": len(citas),
-        "items": citas,
+        "items": [CitaResponse.model_validate(c) for c in citas],
     }
 
 
